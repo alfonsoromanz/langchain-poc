@@ -8,8 +8,10 @@ const model = new OpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
 });
 
+const question = "what is the current price of bitcoin?"
 const res = await model.call(
-  "What's a good idea for an application to build with GPT-3?"
+  question
 );
 
-console.log(res);
+console.log(`Question: ${question}`);
+console.log(`Response: ${res}`);
