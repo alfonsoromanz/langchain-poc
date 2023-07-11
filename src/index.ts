@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
 import { OpenAI } from "langchain";
-import { SerpAPI } from "langchain/tools";
-import { initializeAgentExecutor } from "langchain/agents";
+import { APIChain } from "langchain/chains";
 
 
 dotenv.config();
@@ -10,18 +9,20 @@ const model = new OpenAI({
   modelName: "gpt-3.5-turbo",
   openAIApiKey: process.env.OPENAI_API_KEY,
 });
-const tools = [
-  new SerpAPI(process.env.SERPAPI_API_KEY, {
-    location: "Austin,Texas,United States",
-    hl: "en",
-    gl: "us",
-  })
-];
 
+const API_DOCS = ` Base URL: https://api.yadio.io/
+Endpoints:
+- /exrates/{currency} where {currency} is a variable reflecting nation-state currencies
 
-const executor = await initializeAgentExecutor(tools, model, "zero-shot-react-description", true);
+Valid values for currency: ARS (Argentine Peso), USD (United States dollar), EUR (Euro)
 
-const question = "what is the biggest bitcoin transaction ever recorded?"
-console.log(`Question: ${question} \n`);
-const res = await executor.call({input: question})
-console.log(`\n Response: ${res.output}`);
+The response will be a JSON that will at least include a field called "BTC" reflecting the price of 1 bitcoin in the selected currency
+`
+
+const chain = APIChain.fromLLMAndAPIDocs(model, API_DOCS);
+
+const res = await chain.call({
+    question:
+      "How much does it cost to buy half a bitcoin with argentine money?",
+  });
+  console.log({ res });
